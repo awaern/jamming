@@ -1,22 +1,78 @@
 import React, { useState } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import {
+  FormControl,
+  InputLabel,
+  OutlinedInput,
+  InputAdornment,
+  IconButton,
+} from '@material-ui/core';
+import SearchIcon from '@material-ui/icons/Search';
 import './SearchBar.css';
+import * as Spotify from '../../util/Spotify';
+import { useSearch } from '../../context/search';
 
-export const SearchBar = props => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const search = () => {
-        props.onSearch(searchTerm);
-    }
+const useStyles = makeStyles((theme) => ({
+  root: {
+    color: theme.palette.common.white,
+  },
+}));
 
-    const handleTermChange = event => {
-        setSearchTerm(event.target.value);
-    }
+export const SearchBar = (props) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const { dispatch } = useSearch();
+
+  const classes = useStyles();
+
+  const search = (searchTerm) => {
+    Spotify.search(searchTerm).then((searchResults) => {
+      console.log(searchResults);
+      dispatch({ type: 'search/result', payload: searchResults });
+    });
+  };
+  const handleSearch = (event) => {
+    event.preventDefault();
+    search(searchTerm);
+  };
+
+  const handleTermChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
 
   return (
-    <div className="SearchBar">
-      <input placeholder="Enter A Song, Album, or Artist" onChange={handleTermChange} />
-      <button className="SearchButton" onClick={search}>SEARCH</button>
-    </div>
+    <form className="SearchBar" noValidate autoComplete="off">
+      <FormControl fullWidth variant="outlined">
+        <InputLabel
+          htmlFor="input-search"
+          classes={{ formControl: classes.root }}
+        >
+          Enter A Song, Album, or Artist
+        </InputLabel>
+        <OutlinedInput
+          id="input-search"
+          variant="outlined"
+          label=" Enter A Song, Album, or Artist"
+          onChange={handleTermChange}
+          fullWidth
+          endAdornment={
+            <InputAdornment position="end">
+              <IconButton
+                aria-label="Search"
+                onClick={handleSearch}
+                type="submit"
+                classes={{
+                  root: classes.root,
+                }}
+              >
+                <SearchIcon />
+              </IconButton>
+            </InputAdornment>
+          }
+          classes={{
+            input: classes.root,
+          }}
+        />
+      </FormControl>
+    </form>
   );
 };
-
-
