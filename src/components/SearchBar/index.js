@@ -8,13 +8,19 @@ import {
   IconButton,
 } from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
-import './SearchBar.css';
 import * as Spotify from '../../util/Spotify';
 import { useSearch } from '../../context/search';
 
 const useStyles = makeStyles((theme) => ({
   root: {
     color: theme.palette.common.white,
+  },
+  searchBar: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    paddingTop: '6.94rem',
+    marginBottom: '6.33rem',
   },
 }));
 
@@ -26,7 +32,6 @@ export const SearchBar = (props) => {
 
   const search = (searchTerm) => {
     Spotify.search(searchTerm).then((searchResults) => {
-      console.log(searchResults);
       dispatch({ type: 'search/result', payload: searchResults });
     });
   };
@@ -40,7 +45,7 @@ export const SearchBar = (props) => {
   };
 
   return (
-    <form className="SearchBar" noValidate autoComplete="off">
+    <form className={classes.searchBar} noValidate autoComplete="off">
       <FormControl fullWidth variant="outlined">
         <InputLabel
           htmlFor="input-search"

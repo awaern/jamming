@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   createMuiTheme,
   makeStyles,
@@ -7,10 +7,10 @@ import {
 import { purple } from '@material-ui/core/colors';
 import { Container } from '@material-ui/core';
 import './App.css';
-import { SearchBar } from './components/SearchBar/SearchBar';
-import { SearchResults } from './components/SearchResults/SearchResults';
-import { Playlist } from './components/Playlist/Playlist';
-import { SearchProvider } from './context/search';
+import { SearchBar } from './components/SearchBar';
+import { SearchResults } from './components/SearchResults';
+import { Playlist } from './components/Playlist';
+import { useSearch } from './context/search';
 import * as Spotify from './util/Spotify';
 
 const theme = createMuiTheme({
@@ -37,50 +37,34 @@ const Header = () => {
 };
 
 function App() {
-  const [playListName, setPlaylistName] = useState('New Playlist');
-  const [playListTracks, setPlaylistTracks] = useState([]);
+  const { state, dispatch } = useSearch();
+
+  const savePlayList = () => {
+    const trackURIs = state.playList.map((track) => track.uri);
+    Spotify.savePlaylist(state.playListName, trackURIs).then(() => {
+      dispatch({ type: 'search/resetPlayList' });
+    });
+  };
 
   useEffect(() => {
     Spotify.getAccessToken();
   }, []);
 
-  const removeTrack = (track) => {
-    const filteredList = playListTracks.filter(
-      (savedTrack) => savedTrack.id !== track.id
-    );
-    setPlaylistTracks(filteredList);
-  };
-
-  const updatePlaylistName = (name) => {
-    setPlaylistName(name);
-  };
-
-  const savePlayList = () => {
-    const trackURIs = playListTracks.map((track) => track.uri);
-    Spotify.savePlaylist(playListName, trackURIs).then(() => {
-      setPlaylistName('New Playlist');
-      setPlaylistTracks([]);
-    });
-  };
+  useEffect(() => {
+    if (!state.playListName) return;
+    savePlayList(); // eslint-disable-next-line
+  }, [state.playListName]);
 
   return (
     <ThemeProvider theme={theme}>
       <Header />
       <div className="App">
         <Container maxWidth="md">
-          <SearchProvider>
-            <SearchBar />
-            <div className="App-playlist">
-              <SearchResults />
-              <Playlist
-                playListName={playListName}
-                playListTracks={playListTracks}
-                onRemove={removeTrack}
-                onNameChange={updatePlaylistName}
-                onSave={savePlayList}
-              />
-            </div>
-          </SearchProvider>
+          <SearchBar />
+          <div className="App-playlist">
+            <SearchResults />
+            <Playlist />
+          </div>
         </Container>
       </div>
     </ThemeProvider>

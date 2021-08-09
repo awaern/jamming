@@ -5,6 +5,7 @@ const SearchContext = React.createContext();
 const initialState = {
   result: [],
   playList: [],
+  playListName: '',
 };
 
 const searchReducer = (state = initialState, action) => {
@@ -14,10 +15,28 @@ const searchReducer = (state = initialState, action) => {
         ...state,
         result: action.payload,
       };
-    case 'search/add':
+    case 'search/addTrack':
       return {
         ...state,
         playList: [...state.playList, action.payload],
+      };
+    case 'search/removeTrack':
+      return {
+        ...state,
+        playList: state.playList.filter(
+          (track) => track.id !== action.payload.id
+        ),
+      };
+    case 'search/resetPlayList':
+      return {
+        ...state,
+        playList: [],
+        playListName: '',
+      };
+    case 'search/playListName':
+      return {
+        ...state,
+        playListName: action.payload,
       };
     default:
       return initialState;

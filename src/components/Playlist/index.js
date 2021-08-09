@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import {
   Drawer,
@@ -26,12 +26,24 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export const Playlist = (props) => {
+export const Playlist = () => {
   const [open, setOpen] = useState(false);
-  const { state } = useSearch();
+  const [input, setInput] = useState('');
+  const [fontSize, setFontSize] = useState('');
+  const { state, dispatch } = useSearch();
   const classes = useStyles();
-  const handleNameChange = (event) => {
-    props.onNameChange(event.target.value);
+
+  const savePlayList = () => {
+    dispatch({
+      type: 'search/playListName',
+      payload: input,
+    });
+    setInput('');
+  };
+
+  const resetPlayList = () => {
+    dispatch({ type: 'search/resetPlayList' });
+    setInput('');
   };
 
   const toggleDrawer = (open) => (event) => {
@@ -45,16 +57,24 @@ export const Playlist = (props) => {
     setOpen(open);
   };
 
+  useEffect(() => {
+    if (!state.playList.length) return;
+    setFontSize('large');
+    const hello = setTimeout(() => {
+      setFontSize('');
+    }, 600);
+    return () => clearTimeout(hello);
+  }, [state.playList]);
+
   return (
     <>
-      <Drawer
-        anchor="right"
-        open={open}
-        onClose={toggleDrawer(false)}
-        onOpen={toggleDrawer(true)}
-      >
+      <Drawer anchor="right" open={open} onClose={toggleDrawer(false)}>
         <div className={classes.list}>
-          <TextField value={props.playListName} onChange={handleNameChange} />
+          <TextField
+            label="New Playlist"
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+          />
           {state.playList.length > 0 && (
             <List>
               {state.playList.map((track) => (
@@ -69,7 +89,14 @@ export const Playlist = (props) => {
                   />
 
                   <ListItemSecondaryAction>
-                    <IconButton onClick={() => props.onRemove(track)}>
+                    <IconButton
+                      onClick={() =>
+                        dispatch({
+                          type: 'search/removeTrack',
+                          payload: track,
+                        })
+                      }
+                    >
                       <Delete />
                     </IconButton>
                   </ListItemSecondaryAction>
@@ -77,9 +104,14 @@ export const Playlist = (props) => {
               ))}
             </List>
           )}
-          <Button onClick={props.onSave} variant="contained">
-            SAVE TO SPOTIFY
+          <Button onClick={savePlayList} variant="contained" color="primary">
+            Save to Spotify
           </Button>
+          {state.playList.length > 0 && (
+            <Button onClick={resetPlayList} color="secondary">
+              Reset Playlist
+            </Button>
+          )}
         </div>
       </Drawer>
       <Fab
@@ -87,7 +119,11 @@ export const Playlist = (props) => {
         onClick={() => setOpen(true)}
         className={classes.fab}
       >
-        <Favorite />
+        <Favorite
+          color={state.playList.length ? 'secondary' : ''}
+          fontSize={fontSize}
+          style={{ transition: 'font-size 0.3s' }}
+        />
       </Fab>
     </>
   );
